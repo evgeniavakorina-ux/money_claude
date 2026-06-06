@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Диагностика денежного блока — Евгения</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F7F3ED;
+    --cream-dark: #EDE7DC;
+    --burgundy: #6B2737;
+    --burgundy-light: #8B3A4A;
+    --gold: #B8924A;
+    --gold-light: #D4AF71;
+    --text: #2C1810;
+    --text-muted: #6B5B4E;
+    --border: rgba(107, 39, 55, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--cream);
+    font-family: 'Jost', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(ellipse at 20% 10%, rgba(184,146,74,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(107,39,55,0.06) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .header-tag {
+    display: inline-block;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-light);
+    padding: 6px 18px;
+    border-radius: 30px;
+    margin-bottom: 24px;
+  }
+
+  .header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--burgundy);
+    margin-bottom: 16px;
+  }
+
+  .header h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .header p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    max-width: 520px;
+    margin: 0 auto 8px;
+    font-weight: 300;
+  }
+
+  .ornament {
+    color: var(--gold);
+    font-size: 20px;
+    letter-spacing: 8px;
+    margin: 20px 0;
+    opacity: 0.6;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    margin-bottom: 36px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--cream-dark);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--burgundy), var(--gold));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* SCREENS */
+  .screen {
+    display: none;
+    animation: fadeUp 0.5s ease both;
+  }
+  .screen.active { display: block; }
+
+  /* QUESTION CARD */
+  .question-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 32px rgba(44,24,16,0.06);
+  }
+
+  .block-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .block-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--burgundy);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .block-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--burgundy);
+    line-height: 1.2;
+  }
+
+  .question-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+
+  /* OPTIONS */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--cream);
+    position: relative;
+    user-select: none;
+  }
+
+  .option:hover {
+    border-color: var(--gold-light);
+    background: #fff;
+  }
+
+  .option.selected {
+    border-color: var(--burgundy);
+    background: rgba(107,39,55,0.04);
+  }
+
+  .option-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--cream-dark);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .option.selected .option-check {
+    background: var(--burgundy);
+    border-color: var(--burgundy);
+  }
+
+  .option.selected .option-check::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .option-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .option.selected .option-text {
+    color: var(--burgundy);
+    font-weight: 400;
+  }
+
+  /* SCORE hint */
+  .score-hint {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .score-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--cream-dark);
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+
+  /* NAV */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .btn {
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 14px 32px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-primary {
+    background: var(--burgundy);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(107,39,55,0.25);
+  }
+
+  .btn-primary:hover {
+    background: var(--burgundy-light);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(107,39,55,0.3);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: var(--text-muted);
+  }
+
+  /* INTRO SCREEN */
+  .intro-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 44px 36px;
+    text-align: center;
+    box-shadow: 0 4px 32px rgba(44,24,16,0.06);
+    margin-bottom: 20px;
+  }
+
+  .intro-card h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--burgundy);
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+
+  .intro-card p {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-weight: 300;
+  }
+
+  .intro-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 24px 0;
+    text-align: left;
+  }
+
+  .intro-block-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--cream);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .intro-block-item span {
+    color: var(--gold);
+    font-size: 16px;
+  }
+
+  .time-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    letter-spacing: 0.3px;
+  }
+
+  /* RESULT SCREEN */
+  .result-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .result-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(26px, 5vw, 40px);
+    font-weight: 400;
+    color: var(--burgundy);
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+
+  .result-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .blocks-result {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .block-result-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    box-shadow: 0 2px 16px rgba(44,24,16,0.04);
+  }
+
+  .block-result-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .block-result-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .block-result-score {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .score-low { background: rgba(107,39,55,0.08); color: var(--burgundy); }
+  .score-mid { background: rgba(184,146,74,0.12); color: #8B6A20; }
+  .score-high { background: rgba(107,39,55,0.18); color: var(--burgundy); }
+
+  .block-result-bar {
+    height: 6px;
+    background: var(--cream-dark);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .block-result-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--burgundy), var(--gold-light));
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .block-result-desc {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .block-result-desc strong {
+    color: var(--burgundy);
+    font-weight: 500;
+  }
+
+  /* MAIN BLOCK HIGHLIGHT */
+  .main-block-highlight {
+    background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-light) 100%);
+    color: #fff;
+    border-radius: 20px;
+    padding: 28px 28px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .main-block-highlight::before {
+    content: '✦';
+    position: absolute;
+    right: 20px;
+    top: 16px;
+    font-size: 40px;
+    opacity: 0.15;
+    color: var(--gold-light);
+  }
+
+  .main-block-highlight .mbl-tag {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .main-block-highlight h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+
+  .main-block-highlight p {
+    font-size: 13px;
+    line-height: 1.7;
+    opacity: 0.85;
+    font-weight: 300;
+  }
+
+  /* CTA */
+  .cta-card {
+    background: var(--cream-dark);
+    border: 1px solid rgba(184,146,74,0.3);
+    border-radius: 20px;
+    padding: 32px 28px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .cta-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--burgundy);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .cta-card p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    font-weight: 300;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-tg {
+    background: var(--burgundy);
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s;
+    box-shadow: 0 4px 16px rgba(107,39,55,0.25);
+  }
+
+  .btn-tg:hover {
+    background: var(--burgundy-light);
+    transform: translateY(-1px);
+  }
+
+  .btn-vk {
+    background: #fff;
+    color: var(--burgundy);
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid var(--burgundy);
+    transition: all 0.25s;
+  }
+
+  .btn-vk:hover {
+    background: rgba(107,39,55,0.04);
+    transform: translateY(-1px);
+  }
+
+  .cta-product-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--burgundy);
+    line-height: 1.4;
+    margin: 14px 0 12px;
+  }
+
+  .cta-product-desc {
+    font-size: 13px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .btn-pay {
+    font-size: 15px !important;
+    padding: 16px 40px !important;
+    letter-spacing: 0.3px;
+  }
+
+  .diagnostic-price {
+    display: inline-block;
+    background: var(--gold);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 6px 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  .restart-btn {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 300;
+  }
+
+  .restart-btn:hover { color: var(--burgundy); }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 300;
+    opacity: 0.6;
+    letter-spacing: 0.3px;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* MOBILE */
+  @media (max-width: 480px) {
+    .container { padding: 24px 16px 60px; }
+    .intro-card, .question-card { padding: 28px 20px 22px; }
+    .cta-buttons { flex-direction: column; }
+    .btn-tg, .btn-vk { justify-content: center; }
+    .main-block-highlight { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-tag">диагностика</div>
+    <h1>Где ты сама себе<br><em>перекрываешь деньги?</em></h1>
+    <div class="ornament">✦ · ✦</div>
+    <p>Тест определит твой профиль денежного блока — не общий, а конкретно твой.</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-label">
+      <span id="progressText">Блок 1 из 5</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 0: INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="intro-card">
+      <h2>Это не обычный тест.<br>Это твоя личная карта блоков.</h2>
+      <p>5 блоков, 3–4 утверждения в каждом. Отмечай всё что резонирует — без фильтра и самоцензуры.</p>
+      <p>В конце получишь: <strong>какой блок у тебя главный</strong>, как он работает именно в твоём случае, и что с этим делать.</p>
+      <div class="intro-blocks">
+        <div class="intro-block-item"><span>✦</span> Блок 1 — Ты не понимаешь, где твои деньги</div>
+        <div class="intro-block-item"><span>✦</span> Блок 2 — Ты обесцениваешь свой опыт</div>
+        <div class="intro-block-item"><span>✦</span> Блок 3 — Зарабатываешь через «надо», не через энергию</div>
+        <div class="intro-block-item"><span>✦</span> Блок 4 — Боишься проявляться и заявлять о себе</div>
+        <div class="intro-block-item"><span>✦</span> Блок 5 — Сценарий «деньги только через тяжёлый труд»</div>
+      </div>
+      <p class="time-note">⏱ 3–5 минут</p>
+    </div>
+    <div style="text-align:center">
+      <button class="btn btn-primary" onclick="startTest()">Начать диагностику →</button>
+    </div>
+  </div>
+
+  <!-- SCREENS 1–5: QUESTIONS (generated by JS) -->
+  <div id="questionScreens"></div>
+
+  <!-- SCREEN RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result-header">
+      <h2>Твой профиль<br>денежного блока</h2>
+      <p>Вот что происходит у тебя внутри — и почему деньги не растут так, как хочется.</p>
+    </div>
+
+    <div id="mainBlockHighlight"></div>
+    <div class="blocks-result" id="blocksResult"></div>
+
+    <div class="cta-card">
+      <h3>Этот разбор показал только общую картину</h3>
+      <p>Более глубокую информацию — и главное, <strong>как именно это исправить</strong> — ты узнаешь на платном мини-разборе:</p>
+      <div class="cta-product-name">«Где ты ограничиваешь себя в деньгах<br>и как это исправить?»</div>
+      <p class="cta-product-desc">По твоей дате рождения ты получишь конкретную инструкцию — что именно мешает деньгам расти в твоём случае и что с этим делать.</p>
+      <div class="diagnostic-price">1 888 ₽</div>
+      <div class="cta-buttons">
+        <a href="https://payform.ru/lqbHBXx/" target="_blank" class="btn-tg btn-pay">
+          Перейти к оплате →
+        </a>
+      </div>
+    </div>
+
+    <span class="restart-btn" onclick="restartTest()">Пройти заново</span>
+  </div>
+
+  <div class="footer">@evgenia_jain · Евгения — астролог, таролог, ПВС-интегратор</div>
+</div>
+
+<script>
+const questions = [
+  {
+    block: 1,
+    title: "Ты не понимаешь, где твои деньги",
+    items: [
+      { text: "Пробую разные способы заработка, но не чувствую «да, это моё»", score: 3 },
+      { text: "Сегодня хочу одно, завтра другое — постоянно мечусь между идеями", score: 2 },
+      { text: "Смотрю на других и повторяю чужие стратегии, но результата нет", score: 3 },
+      { text: "Не знаю, за что именно мне стоит брать деньги", score: 2 }
+    ],
+    desc: {
+      low: "Своё направление ты в целом чувствуешь, но периодически теряешь фокус. Это нормально — важно держать нить.",
+      mid: "Есть нечёткость в том, где именно твои деньги. Ты движешься, но немного вслепую — и это забирает энергию.",
+      high: "Ты ищешь своё место, копируешь чужое, но не чувствуешь резонанса. Главное, что тебе сейчас нужно — найти свою природу, а не чужую стратегию."
+    },
+    action: "Ответь письменно: за что люди уже благодарили тебя? Что тебе даётся легче, чем другим?"
+  },
+  {
+    block: 2,
+    title: "Ты обесцениваешь свой опыт",
+    items: [
+      { text: "Думаю «да это легко, так все умеют» про то, что у меня хорошо получается", score: 3 },
+      { text: "Кажется, что я ещё недостаточно знаю — нужно ещё одно обучение", score: 2 },
+      { text: "Сложно ставить нормальную цену и спокойно её называть", score: 3 },
+      { text: "Мне рано брать больше / я не готова продавать дороже", score: 2 }
+    ],
+    desc: {
+      low: "Самоценность в целом держишь, хотя иногда сомневаешься. Следи за моментами, когда начинаешь принижать себя.",
+      mid: "Обесценивание есть, но точечное — в отдельных темах или ситуациях. Стоит разобраться, где именно и почему.",
+      high: "Ты смотришь на себя через недостаток. Видишь что ещё не так, а не то, что уже есть. Именно это мешает ставить нормальную цену и спокойно её называть."
+    },
+    action: "Напиши 10 вещей: что ты уже умеешь, знаешь или пережила — что может быть ценным для других."
+  },
+  {
+    block: 3,
+    title: "Зарабатываешь через «надо», не через энергию",
+    items: [
+      { text: "Делаю то, что «правильно» или одобряют другие, а не то, что моё", score: 3 },
+      { text: "Устала — но продолжаю, потому что надо", score: 2 },
+      { text: "Есть ощущение, что живу не свою жизнь / работаю не своё", score: 3 },
+      { text: "Деньги есть, но ценой постоянного напряжения и выгорания", score: 2 }
+    ],
+    desc: {
+      low: "В целом ты в своём. Может быть небольшое несоответствие, но энергия на деле есть.",
+      mid: "Часть деятельности идёт через силу. Это не катастрофа, но утечка — стоит найти, где именно.",
+      high: "Ты зарабатываешь через «надо», а не через живость. Это дорого стоит — выгорание, апатия, ощущение что ты не там. Деньги и энергия очень связаны."
+    },
+    action: "Что в твоей работе прямо сейчас забирает больше всего сил? Что, наоборот, даёт ощущение живости?"
+  },
+  {
+    block: 4,
+    title: "Боишься проявляться и заявлять о себе",
+    items: [
+      { text: "Страшно писать посты, снимать видео, говорить о своих услугах", score: 3 },
+      { text: "Боюсь, что подумают «она много о себе возомнила»", score: 2 },
+      { text: "Бесконечно улучшаю продукт / оформление / стратегию — но не выхожу к людям", score: 3 },
+      { text: "Страшно поднять цену — вдруг не купят или осудят", score: 2 }
+    ],
+    desc: {
+      low: "Проявляться тебе в целом не страшно. Возможно есть небольшая тревога, но она не блокирует.",
+      mid: "Страх проявляться есть, но не тотальный. В каких-то темах или форматах — легче, в других — тяжелее.",
+      high: "Деньги приходят через проявленность — но именно это пугает больше всего. Ты делаешь всё кроме главного: не выходишь к людям. И это не лень — это страх."
+    },
+    action: "Продолжи фразы: «Если я начну активнее проявляться, я боюсь, что...» / «Если я подниму цену, люди могут...»"
+  },
+  {
+    block: 5,
+    title: "Сценарий «деньги только через тяжёлый труд»",
+    items: [
+      { text: "Внутри ощущение, что надо сначала заслужить, выстрадать — потом получить", score: 3 },
+      { text: "Если мне легко — значит я мало сделала / это не считается", score: 2 },
+      { text: "Не разрешаю себе зарабатывать без надрыва и постоянного доказывания", score: 3 },
+      { text: "«Много хочешь — мало получишь» или «деньги достаются тяжело» — это про меня", score: 2 }
+    ],
+    desc: {
+      low: "Сценарий тяжёлого труда тебя почти не держит. Ты в целом разрешаешь себе лёгкие деньги.",
+      mid: "Местами есть установка что надо «заработать право» на деньги. В каких-то темах это сильнее.",
+      high: "Внутри сидит сценарий: деньги даются только через страдание. Ты сама выбираешь сложные пути — не потому что глупая, а потому что внутри по-другому как будто нельзя."
+    },
+    action: "Выпиши 5 фраз про деньги, которые слышала в детстве. Посмотри: какая из них до сих пор управляет тобой?"
+  }
+];
+
+let currentBlock = 0;
+let answers = Array(5).fill(null).map(() => []);
+
+function startTest() {
+  document.getElementById('screen-intro').classList.remove('active');
+  document.getElementById('progressWrap').style.display = 'block';
+  renderBlock(0);
+}
+
+function renderBlock(idx) {
+  const container = document.getElementById('questionScreens');
+  const q = questions[idx];
+  
+  // Remove old screens
+  container.innerHTML = '';
+
+  const screen = document.createElement('div');
+  screen.className = 'screen active';
+  screen.id = `screen-q${idx}`;
+
+  const opts = q.items.map((item, i) => `
+    <div class="option ${answers[idx].includes(i) ? 'selected' : ''}" onclick="toggleOption(${idx}, ${i}, this)">
+      <div class="option-check"></div>
+      <div class="option-text">${item.text}</div>
+    </div>
+  `).join('');
+
+  screen.innerHTML = `
+    <div class="question-card">
+      <div class="block-label">
+        <div class="block-num">${idx+1}</div>
+        <div class="block-title">${q.title}</div>
+      </div>
+      <p class="question-text">Отметь всё, что резонирует:</p>
+      <div class="options">${opts}</div>
+    </div>
+    <div class="nav">
+      ${idx > 0 ? `<button class="btn btn-secondary" onclick="goBack(${idx})">← Назад</button>` : '<div></div>'}
+      <button class="btn btn-primary" id="nextBtn${idx}" onclick="nextBlock(${idx})">${idx < 4 ? 'Дальше →' : 'Показать результат →'}</button>
+    </div>
+  `;
+
+  container.appendChild(screen);
+  updateProgress(idx);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function toggleOption(blockIdx, itemIdx, el) {
+  const arr = answers[blockIdx];
+  const pos = arr.indexOf(itemIdx);
+  if (pos > -1) {
+    arr.splice(pos, 1);
+    el.classList.remove('selected');
+  } else {
+    arr.push(itemIdx);
+    el.classList.add('selected');
+  }
+}
+
+function goBack(idx) {
+  currentBlock = idx - 1;
+  renderBlock(currentBlock);
+}
+
+function nextBlock(idx) {
+  if (idx < 4) {
+    currentBlock = idx + 1;
+    renderBlock(currentBlock);
+  } else {
+    showResult();
+  }
+}
+
+function updateProgress(idx) {
+  const pct = Math.round((idx / 5) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `Блок ${idx+1} из 5`;
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+function getScore(blockIdx) {
+  const q = questions[blockIdx];
+  const sel = answers[blockIdx];
+  return sel.reduce((sum, i) => sum + q.items[i].score, 0);
+}
+
+function getLevel(score, max) {
+  const pct = score / max;
+  if (pct < 0.35) return 'low';
+  if (pct < 0.65) return 'mid';
+  return 'high';
+}
+
+function getLevelLabel(level) {
+  if (level === 'low') return 'Слабо выражен';
+  if (level === 'mid') return 'Умеренно';
+  return 'Сильно выражен';
+}
+
+function getLevelClass(level) {
+  if (level === 'low') return 'score-low';
+  if (level === 'mid') return 'score-mid';
+  return 'score-high';
+}
+
+function showResult() {
+  document.getElementById('questionScreens').innerHTML = '';
+  document.getElementById('progressWrap').style.display = 'none';
+
+  const maxScore = 10; // 3+3+2+2
+  const scores = questions.map((_, i) => getScore(i));
+  const maxIdx = scores.indexOf(Math.max(...scores));
+  const mainBlock = questions[maxIdx];
+  const mainScore = scores[maxIdx];
+  const mainLevel = getLevel(mainScore, maxScore);
+
+  // Main block highlight
+  document.getElementById('mainBlockHighlight').innerHTML = `
+    <div class="main-block-highlight">
+      <div class="mbl-tag">Главный блок</div>
+      <h3>${mainBlock.title}</h3>
+      <p>${mainBlock.desc[mainLevel]}</p>
+    </div>
+  `;
+
+  // All blocks
+  const blocksHtml = questions.map((q, i) => {
+    const s = scores[i];
+    const level = getLevel(s, maxScore);
+    const pct = Math.round((s / maxScore) * 100);
+    return `
+      <div class="block-result-card">
+        <div class="block-result-top">
+          <div class="block-result-name">
+            <div class="block-num">${i+1}</div>
+            ${q.title}
+          </div>
+          <span class="block-result-score ${getLevelClass(level)}">${getLevelLabel(level)}</span>
+        </div>
+        <div class="block-result-bar">
+          <div class="block-result-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="block-result-desc">${q.desc[level]}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('blocksResult').innerHTML = blocksHtml;
+
+  document.getElementById('screen-result').classList.add('active');
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressText').textContent = 'Готово';
+  document.getElementById('progressPct').textContent = '100%';
+  document.getElementById('progressWrap').style.display = 'block';
+
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function restartTest() {
+  answers = Array(5).fill(null).map(() => []);
+  currentBlock = 0;
+  document.getElementById('screen-result').classList.remove('active');
+  document.getElementById('questionScreens').innerHTML = '';
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('screen-intro').classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+</body>
+</html>
